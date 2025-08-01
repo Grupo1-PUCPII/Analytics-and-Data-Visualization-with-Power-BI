@@ -1,0 +1,190 @@
+-- Tabla: Personas (prospectos, compradores, vendedores)
+CREATE TABLE G1.Personas (
+  id_persona INT PRIMARY KEY,
+  tipo VARCHAR, -- natural o juridica
+  nombre_razon_social VARCHAR,
+  documento_identidad VARCHAR,
+  correo VARCHAR,
+  telefono VARCHAR
+);
+
+-- Tabla: Compradores (referencia a Persona)
+CREATE TABLE G1.Compradores (
+  id_comprador INT PRIMARY KEY,
+  id_persona INT,
+  FOREIGN KEY (id_persona) REFERENCES G1.Personas(id_persona)
+);
+
+-- Tabla: Vendedores
+CREATE TABLE G1.Vendedores (
+  id_vendedor INT PRIMARY KEY,
+  id_persona INT,
+  cargo VARCHAR,
+  estado VARCHAR,
+  FOREIGN KEY (id_persona) REFERENCES G1.Personas(id_persona)
+);
+
+-- Tabla: Canales
+CREATE TABLE G1.Canales (
+  id_canal INT PRIMARY KEY,
+  nombre VARCHAR,
+  descripcion TEXT
+);
+
+
+-- Tabla: Proyectos Inmobiliarios
+CREATE TABLE G1.ProyectosInmobiliarios (
+  id_proyecto INT PRIMARY KEY,
+  nombre VARCHAR,
+  fecha_inicio DATE,
+  fecha_cierre DATE,
+  estado VARCHAR,
+  direccion VARCHAR
+);
+
+-- Tabla: Etapas del Proyecto
+CREATE TABLE G1.Etapas_Proyecto (
+  id_etapa INT PRIMARY KEY,
+  id_proyecto INT,
+  nombre_etapa VARCHAR,
+  fecha_inicio DATE,
+  fecha_fin DATE,
+  FOREIGN KEY (id_proyecto) REFERENCES G1.ProyectosInmobiliarios(id_proyecto)
+);
+
+-- Tabla: Departamentos
+CREATE TABLE G1.Departamentos (
+  id_departamento INT PRIMARY KEY,
+  id_proyecto INT,
+  numero VARCHAR,
+  piso INT,
+  area_m2 DECIMAL,
+  dormitorios INT,
+  banos INT,
+  estacionamiento char(1),
+  estado VARCHAR,
+  FOREIGN KEY (id_proyecto) REFERENCES G1.ProyectosInmobiliarios(id_proyecto)
+);
+
+-- Tabla: Precios por Departamento (por etapa)
+CREATE TABLE G1.Precios_Departamento (
+  id_precio INT PRIMARY KEY,
+  id_departamento INT,
+  id_etapa INT,
+  precio_usd DECIMAL,
+  fecha_asignacion DATE,
+  FOREIGN KEY (id_departamento) REFERENCES G1.Departamentos(id_departamento),
+  FOREIGN KEY (id_etapa) REFERENCES G1.Etapas_Proyecto(id_etapa)
+);
+
+-- Tabla: Leads
+CREATE TABLE G1.Leads (
+  id_lead INT PRIMARY KEY,
+  id_proyecto INT,
+  id_persona INT,
+  id_canal INT,
+  fecha_registro DATE,
+  estado VARCHAR,
+  FOREIGN KEY (id_proyecto) REFERENCES G1.ProyectosInmobiliarios(id_proyecto),
+  FOREIGN KEY (id_persona) REFERENCES G1.Personas(id_persona),
+  FOREIGN KEY (id_canal) REFERENCES G1.Canales(id_canal)
+);
+
+
+-- Tabla: Interacciones (espont neas)
+CREATE TABLE G1.Interacciones (
+  id_interaccion INT PRIMARY KEY,
+  id_lead INT,
+  id_vendedor INT,
+  canal VARCHAR,
+  fecha_interaccion DATE,
+  comentario TEXT,
+  FOREIGN KEY (id_lead) REFERENCES G1.Leads(id_lead),
+  FOREIGN KEY (id_vendedor) REFERENCES G1.Vendedores(id_vendedor)
+);
+
+-- Tabla: Actividades Comerciales (planificadas)
+CREATE TABLE G1.Actividades_Comerciales (
+  id_actividad INT PRIMARY KEY,
+  id_lead INT,
+  id_vendedor INT,
+  tipo_actividad VARCHAR,
+  fecha_programada DATE,
+  resultado VARCHAR,
+  comentario TEXT,
+  FOREIGN KEY (id_lead) REFERENCES G1.Leads(id_lead),
+  FOREIGN KEY (id_vendedor) REFERENCES G1.Vendedores(id_vendedor)
+);
+
+-- Tabla: Historial de Estados del Lead
+CREATE TABLE G1.Historial_Estados_Lead (
+  id_historial INT PRIMARY KEY,
+  id_lead INT,
+  estado_anterior VARCHAR,
+  estado_nuevo VARCHAR,
+  fecha_cambio DATETIME,
+  usuario VARCHAR,
+  FOREIGN KEY (id_lead) REFERENCES G1.Leads(id_lead)
+);
+
+-- Tabla: Reservas
+CREATE TABLE G1.Reservas (
+  id_reserva INT PRIMARY KEY,
+  id_lead INT,
+  id_departamento INT,
+  fecha_reserva DATE,
+  monto_reserva DECIMAL,
+  estado VARCHAR,
+  FOREIGN KEY (id_lead) REFERENCES G1.Leads(id_lead),
+  FOREIGN KEY (id_departamento) REFERENCES G1.Departamentos(id_departamento)
+);
+
+-- Tabla: Ventas
+CREATE TABLE G1.Ventas (
+  id_venta INT PRIMARY KEY,
+  id_departamento INT,
+  id_lead INT,
+  fecha_venta DATE,
+  precio_final DECIMAL,
+  medio_pago VARCHAR,
+  estado VARCHAR,
+  FOREIGN KEY (id_lead) REFERENCES G1.Leads(id_lead),
+  FOREIGN KEY (id_departamento) REFERENCES G1.Departamentos(id_departamento)
+);
+
+-- Tabla: Financiamiento
+CREATE TABLE G1.Financiamiento (
+  id_financiamiento INT PRIMARY KEY,
+  id_venta INT,
+  entidad_financiera VARCHAR,
+  tipo_credito VARCHAR,
+  estado_aprobacion VARCHAR,
+  FOREIGN KEY (id_venta) REFERENCES G1.Ventas(id_venta)
+);
+
+-- Tabla: Campanas
+CREATE TABLE G1.Campanas (
+  id_campana INT PRIMARY KEY,
+  nombre VARCHAR,
+  id_proyecto INT,
+  id_canal INT,
+  fecha_inicio DATE,
+  fecha_fin DATE,
+  presupuesto DECIMAL,
+  FOREIGN KEY (id_proyecto) REFERENCES G1.ProyectosInmobiliarios(id_proyecto),
+  FOREIGN KEY (id_canal) REFERENCES G1.Canales(id_canal)
+);
+
+-- Tabla: Hechos KPI (para reportes)
+CREATE TABLE G1.KPI_Facts (
+  id_fact INT PRIMARY KEY,
+  id_proyecto INT,
+  id_etapa INT,
+  semana DATE,
+  leads_captados INT,
+  reservas INT,
+  ventas INT,
+  tasa_conversion DECIMAL,
+  FOREIGN KEY (id_proyecto) REFERENCES G1.ProyectosInmobiliarios(id_proyecto),
+  FOREIGN KEY (id_etapa) REFERENCES G1.Etapas_Proyecto(id_etapa)
+);
